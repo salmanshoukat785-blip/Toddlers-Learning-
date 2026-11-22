@@ -40,16 +40,25 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: gradle assembleDebug --stacktrace
 
-      - name: Collect APK
+      - name: Build release APK (smaller, optimised)
+        id: rel
+        continue-on-error: true
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: gradle assembleRelease --stacktrace
+
+      - name: Collect APKs
         run: |
           mkdir -p out
           cp "$PROJECT_DIR"/app/build/outputs/apk/debug/*.apk out/LittleLearners-debug.apk
+          if ls "$PROJECT_DIR"/app/build/outputs/apk/release/*.apk >/dev/null 2>&1; then
+            cp "$PROJECT_DIR"/app/build/outputs/apk/release/*.apk out/LittleLearners-release.apk
+          fi
 
       - name: Upload as artifact
         uses: actions/upload-artifact@v4
         with:
           name: LittleLearners-debug
-          path: out/LittleLearners-debug.apk
+          path: out/*.apk
 
       # Direct download link: repo ke "Releases" section mein APK mil jayegi.
       - name: Publish as GitHub Release
@@ -57,4 +66,4 @@ jobs:
         with:
           tag_name: build-${{ github.run_number }}
           name: APK build ${{ github.run_number }}
-          files: out/LittleLearners-debug.apk
+          files: out/*.apk
